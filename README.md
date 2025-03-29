@@ -12,9 +12,9 @@ Cloud Storage(upload file) -> Eventarc Trigger(storage) -> Cloud Run(gcs-receive
 
 ## Directory Structure
 ```text
-gcs-event-to-job/
+gcs-event-to-pubsub/
 ├── dispatcher/           # Cloud Run service that launches the job
-│   ├── main.py           # Flask app to receive and dispatch Pub/Sub
+│   ├── main.py
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── gcs-receiver/         # Cloud Run service that receives Cloud Storage events
@@ -22,9 +22,14 @@ gcs-event-to-job/
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── worker-job/           # Cloud Run Job that does the long-running task
-│   ├── main.py           # Sleep duration is based on filename
+│   ├── main.py
 │   ├── requirements.txt
 │   └── Dockerfile
+├── .env.template         # Environment variable sample
+├── deploy.sh             # One-shot deploy script
+├── cleanup.sh            # One-shot cleanup script
+├── Makefile              # make deploy / make cleanup / make logs
+└── .gitignore
 ```
 
 ## Key Technologies Used
@@ -36,92 +41,36 @@ gcs-event-to-job/
 - **Cloud Run Job**: used for long-running background processing
 - **Flask + Gunicorn**: lightweight web servers
 
-# Set Environment Variables
+## Quick Start
+### Setup
 ```
-export REGION=asia-northeast1
-export TOPIC_NAME=long-task-topic
-export BUCKET_NAME=your-bucket-name
+git clone https://github.com/kojimura/gcs-event-to-pubsub.git
+cd gcs-event-to-pubsub
+
+# Copy and configure environment variables
+cp .env.template .env
+vi .env
 ```
 
-# Create Pub/Sub Topic
-```
-gcloud pubsub topics create $TOPIC_NAME || echo "Topic already exists"
-```
-
-# Build & Create Cloud Run Job
-```
-cd worker-job
-gcloud run jobs create worker-job \
-  --source . \
-  --region=$REGION \
-  --memory=512Mi
+# Deploy
+```bash
+make deploy
 ```
 
-# Deploy gcs-receiver
-```
-cd ../gcs-receiver
-gcloud run deploy gcs-receiver \
-  --source . \
-  --region=$REGION \
-  --memory=512Mi \
-  --set-env-vars TOPIC_NAME=$TOPIC_NAME,GCP_PROJECT=$(gcloud config get-value project) \
-  --no-allow-unauthenticated
-```
-
-# Deploy dispatcher
-```
-cd ../dispatcher
-gcloud run deploy dispatcher \
-  --source . \
-  --region=$REGION \
-  --memory=512Mi \
-  --set-env-vars JOB_NAME=worker-job,JOB_REGION=$REGION,GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project) \
-  --no-allow-unauthenticated
-```
-
-# Create Eventarc Triggers
-# GCS to gcs-receiver
-```
-gcloud eventarc triggers create gcs-to-pubsub-trigger \
-  --location=$REGION \
-  --destination-run-service=gcs-receiver \
-  --destination-run-region=$REGION \
-  --event-filters="type=google.cloud.storage.object.v1.finalized" \
-  --event-filters="bucket=$BUCKET_NAME" \
-  --service-account=$(gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)")-compute@developer.gserviceaccount.com
-```
-
-# Pub/Sub to dispatcher
-```
-gcloud eventarc triggers create pubsub-to-dispatcher \
-  --location=$REGION \
-  --destination-run-service=dispatcher \
-  --destination-run-region=$REGION \
-  --transport-topic=$TOPIC_NAME \
-  --event-filters="type=google.cloud.pubsub.topic.v1.messagePublished" \
-  --service-account=$(gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)")-compute@developer.gserviceaccount.com
-```
-
-# Test Trigger
-```
+# Trigger Job by Uploading a File
+```bash
 echo "test" > sleep_1min.txt
 gsutil cp sleep_1min.txt gs://$BUCKET_NAME
+```
 
 # View Logs
-# gcs-receiver logs
-```
-gcloud run services logs read gcs-receiver --region=$REGION --limit=50
-```
-
-# dispatcher logs
-```
-gcloud run services logs read dispatcher --region=$REGION --limit=50
+```bash
+make logs
 ```
 
-# Cloud Run Job execution logs
-```
-gcloud run jobs executions list --region=$REGION
-gcloud beta run jobs executions logs read [EXECUTION_ID] --region=$REGION
+# Cleanup
+```bash
+make cleanup
 ```
 
 ## Notes
