@@ -51,7 +51,6 @@ gcloud pubsub topics create $TOPIC_NAME || echo "Topic already exists"
 # Build & Create Cloud Run Job
 ```
 cd worker-job
-gcloud builds submit --tag gcr.io/$(gcloud config get-value project)/worker-job
 gcloud run jobs create worker-job \
   --source . \
   --region=$REGION \
