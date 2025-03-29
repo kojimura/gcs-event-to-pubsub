@@ -66,6 +66,16 @@ gsutil cp sleep_1min.txt gs://$BUCKET_NAME
 # View Logs
 ```bash
 make logs
+
+# See logs of most recent job execution (replace EXEC_ID if needed)
+LATEST=$(gcloud run jobs executions list --region=$REGION --format="value(EXECUTION)" --limit=1)
+gcloud beta run jobs executions logs read "$LATEST" --region=$REGION
+
+# View dispatcher logs
+gcloud run services logs read dispatcher --region=$REGION --limit=50
+
+# View gcs-receiver logs
+gcloud run services logs read gcs-receiver --region=$REGION --limit=50
 ```
 
 # Cleanup
