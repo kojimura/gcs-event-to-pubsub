@@ -10,7 +10,7 @@ This project implements a fully event-driven pipeline on Google Cloud that react
 
 Cloud Storage(upload file) -> Eventarc Trigger(storage) -> Cloud Run(gcs-receiver) -> Pub/Sub(long-task-topic) -> Eventarc Trigger(pubsub) -> Cloud Run(dispatcher) -> Cloud Run Job(worker-job)
 
-![Architecture Diagram](docs/dgm.png)
+<img src="docs/dgm.png" alt="Architecture Diagram" width="400"/>
 
 ## Directory Structure
 ```text
