@@ -42,7 +42,7 @@ echo "Creating Cloud Run Job worker-job..."
 gcloud run jobs create worker-job \
   --image gcr.io/$(gcloud config get-value project)/worker-job \
   --region="$REGION" \
-  --memory=512Mi
+  --memory=512Mi \
   --task-timeout 3600s
 
 cd ..
