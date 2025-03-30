@@ -27,4 +27,7 @@ gcloud eventarc triggers delete pubsub-to-dispatcher --location="$REGION" --quie
 echo "Deleting Pub/Sub topic..."
 gcloud pubsub topics delete "$TOPIC_NAME" --quiet || true
 
+echo "Deleting image from Container Registry..."
+gcloud container images delete gcr.io/$(gcloud config get-value project)/worker-job --quiet --force-delete-tags || true
+
 echo "Cleanup complete."
