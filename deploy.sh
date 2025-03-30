@@ -35,13 +35,15 @@ gcloud run deploy dispatcher \
   --no-allow-unauthenticated
 
 cd ../worker-job
+echo "Building Job container image ..."
+gcloud builds submit --tag gcr.io/$(gcloud config get-value project)/worker-job
 
-echo "(Re)creating Cloud Run Job worker-job..."
-gcloud run jobs delete worker-job --region="$REGION" --quiet || true
+echo "Creating Cloud Run Job worker-job..."
 gcloud run jobs create worker-job \
-  --source . \
+  --image gcr.io/$(gcloud config get-value project)/worker-job \
   --region="$REGION" \
   --memory=512Mi
+  --task-timeout 3600s
 
 cd ..
 
