@@ -27,4 +27,4 @@ gcloud eventarc triggers delete pubsub-to-dispatcher --location="$REGION" --quie
 echo "Deleting Pub/Sub topic..."
 gcloud pubsub topics delete "$TOPIC_NAME" --quiet || true
 
-echo "✅ Cleanup complete."
+echo "Cleanup complete."
