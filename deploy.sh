@@ -14,7 +14,7 @@ echo "Creating Pub/Sub topic..."
 gcloud pubsub topics create "$TOPIC_NAME" || echo "Topic already exists"
 
 # Deploy gcs-receiver
-cd gcs-receiver
+cd receiver
 
 echo "Deploying gcs-receiver..."
 gcloud run deploy gcs-receiver \
@@ -63,4 +63,4 @@ gcloud eventarc triggers create pubsub-to-dispatcher \
   --event-filters="type=google.cloud.pubsub.topic.v1.messagePublished" \
   --service-account="$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')-compute@developer.gserviceaccount.com" || true
 
-echo "✅ Deployment complete."
+echo "Deployment complete."
